@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daily Word Categories</title>
+  <meta name="description" content="Play a daily word category puzzle with 16 English words and 4 hidden groups.">
+  <link rel="canonical" href="https://dailywordcat.com/">
+  <meta property="og:title" content="Daily Word Categories">
+  <meta property="og:description" content="A dark, minimal daily word categories puzzle.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://dailywordcat.com/">
+  <meta name="twitter:card" content="summary">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0d10;
+      --panel: #11151a;
+      --panel-2: #161b22;
+      --ink: #f4efe6;
+      --muted: #9aa3ad;
+      --line: rgba(232, 236, 240, 0.15);
+      --tile: #1c232c;
+      --tile-hover: #242c36;
+      --selected: #e9e2d4;
+      --selected-ink: #11151a;
+      --yellow: #d8bb58;
+      --green: #83bc9c;
+      --blue: #80a7cf;
+      --rose: #c98794;
+      --danger: #e46e67;
+      --focus: #efcf73;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(145deg, rgba(128, 167, 207, 0.13), transparent 31rem),
+        linear-gradient(320deg, rgba(201, 135, 148, 0.1), transparent 30rem),
+        var(--bg);
+      color: var(--ink);
+    }
+
+    button {
+      font: inherit;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app {
+      width: min(520px, 100%);
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+    }
+
+    .top {
+      display: grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items: center;
+      gap: 8px;
+      min-height: 48px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+    }
+
+    .icon-btn:focus-visible,
+    .tile:focus-visible,
+    .action:focus-visible {
+      outline: 3px solid rgba(239, 207, 115, 0.5);
+      outline-offset: 2px;
+    }
+
+    .title {
+      text-align: center;
+      display: grid;
+      gap: 2px;
+    }
+
+    .title strong {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .title span {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.2;
+    }
+
+    .scorebar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 12px 0;
+    }
+
+    .score {
+      min-height: 56px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.035);
+      padding: 9px 10px;
+      display: grid;
+      align-content: center;
+      gap: 2px;
+    }
+
+    .score b {
+      font-size: 17px;
+      line-height: 1;
+    }
+
+    .score span,
+    .small {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.3;
+    }
+
+    .game {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .solved {
+      display: grid;
+      gap: 8px;
+    }
+
+    .group {
+      min-height: 54px;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #11151a;
+      display: grid;
+      align-content: center;
+      gap: 3px;
+    }
+
+    .group b {
+      font-size: 12px;
+      line-height: 1.1;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .group span {
+      font-size: 12px;
+      opacity: 0.82;
+      line-height: 1.15;
+    }
+
+    .group.yellow { background: var(--yellow); }
+    .group.green { background: var(--green); }
+    .group.blue { background: var(--blue); }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .tile {
+      aspect-ratio: 1 / 0.72;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--tile);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 4px;
+      font-size: clamp(10px, 3vw, 13px);
+      font-weight: 850;
+      text-transform: uppercase;
+      line-height: 1.04;
+      box-shadow: inset 0 1px rgba(255,255,255,0.05);
+    }
+
+    .tile:active {
+      transform: translateY(1px);
+    }
+
+    .tile[aria-pressed="true"] {
+      background: linear-gradient(135deg, #f2eadf, #b8cad8);
+      border-color: rgba(255,255,255,0.86);
+      color: var(--selected-ink);
+    }
+
+    .tile:hover { background: var(--tile-hover); }
+    .tile[aria-pressed="true"]:hover { background: linear-gradient(135deg, #f2eadf, #b8cad8); }
+
+    .status {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      min-height: 28px;
+    }
+
+    .mistakes {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .life {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--ink);
+      opacity: 0.85;
+    }
+
+    .life.used {
+      background: var(--danger);
+      opacity: 0.5;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      padding-bottom: 4px;
+    }
+
+    .action {
+      min-height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ink);
+      font-weight: 850;
+    }
+
+    .action.primary {
+      background: var(--ink);
+      color: #11151a;
+      border-color: var(--ink);
+    }
+
+    .result {
+      margin-top: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.035);
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .result-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .result-head b {
+      font-size: 13px;
+    }
+
+    .share-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 24px);
+      gap: 4px;
+    }
+
+    .share-cell {
+      width: 24px;
+      height: 24px;
+      border-radius: 5px;
+      background: var(--tile);
+    }
+
+    .share-cell.yellow { background: var(--yellow); }
+    .share-cell.green { background: var(--green); }
+    .share-cell.blue { background: var(--blue); }
+    .share-cell.rose { background: var(--rose); }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%) translateY(80px);
+      opacity: 0;
+      pointer-events: none;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(17, 21, 26, 0.94);
+      color: var(--ink);
+      padding: 10px 14px;
+      font-size: 13px;
+      transition: 180ms ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (min-width: 760px) {
+      .app {
+        width: min(1040px, 100%);
+        padding: 22px;
+      }
+
+      .shell {
+        width: 430px;
+        margin: 0 auto;
+      }
+
+      body {
+        display: grid;
+        place-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="shell">
+      <header class="top">
+        <button class="icon-btn" type="button" aria-label="Open archive">≡</button>
+        <div class="title">
+          <strong>Daily Word Categories</strong>
+          <span>May 25 · Puzzle #142</span>
+        </div>
+        <button class="icon-btn" type="button" aria-label="Open stats">◌</button>
+      </header>
+
+      <section class="scorebar" aria-label="Puzzle status">
+        <div class="score"><b>03:18</b><span>time</span></div>
+        <div class="score"><b>7</b><span>streak</span></div>
+        <div class="score"><b>4/4</b><span>selected</span></div>
+      </section>
+
+      <section class="game" aria-label="Daily puzzle">
+        <div class="solved" aria-label="Solved categories">
+          <div class="group yellow">
+            <b>Things with keys</b>
+            <span>PIANO · MAP · LOCK · INDEX</span>
+          </div>
+          <div class="group green">
+            <b>Breakfast table</b>
+            <span>TOAST · JAM · PLATE · SPOON</span>
+          </div>
+          <div class="group blue">
+            <b>Sky bodies</b>
+            <span>ORBIT · MOON · COMET · PLANET</span>
+          </div>
+        </div>
+
+        <div class="board" aria-label="Word tiles">
+          <button class="tile" type="button" aria-pressed="false">Draft</button>
+          <button class="tile" type="button" aria-pressed="true">Mint</button>
+          <button class="tile" type="button" aria-pressed="false">River</button>
+          <button class="tile" type="button" aria-pressed="true">Field</button>
+          <button class="tile" type="button" aria-pressed="false">Page</button>
+          <button class="tile" type="button" aria-pressed="false">Brush</button>
+          <button class="tile" type="button" aria-pressed="true">Scale</button>
+          <button class="tile" type="button" aria-pressed="false">Match</button>
+          <button class="tile" type="button" aria-pressed="false">Pitch</button>
+          <button class="tile" type="button" aria-pressed="true">Novel</button>
+          <button class="tile" type="button" aria-pressed="false">Frame</button>
+          <button class="tile" type="button" aria-pressed="false">Light</button>
+          <button class="tile" type="button" aria-pressed="false">Trace</button>
+          <button class="tile" type="button" aria-pressed="false">Cast</button>
+          <button class="tile" type="button" aria-pressed="false">Point</button>
+          <button class="tile" type="button" aria-pressed="false">Scene</button>
+        </div>
+
+        <div class="status">
+          <div class="mistakes">
+            <span>Mistakes</span>
+            <span class="life"></span>
+            <span class="life"></span>
+            <span class="life"></span>
+            <span class="life used"></span>
+          </div>
+          <span class="small">One group remains</span>
+        </div>
+
+        <div class="actions">
+          <button class="action" type="button" id="shuffle">Shuffle</button>
+          <button class="action primary" type="button" id="submit">Submit group</button>
+        </div>
+
+        <section class="result" aria-label="Share result">
+          <div class="result-head">
+            <div>
+              <b>Result preview</b>
+              <div class="small">Daily Word Categories #142</div>
+            </div>
+            <button class="action" type="button" id="share">Share</button>
+          </div>
+          <div class="share-grid" aria-hidden="true">
+            <span class="share-cell yellow"></span><span class="share-cell yellow"></span><span class="share-cell yellow"></span><span class="share-cell yellow"></span>
+            <span class="share-cell green"></span><span class="share-cell green"></span><span class="share-cell green"></span><span class="share-cell green"></span>
+            <span class="share-cell blue"></span><span class="share-cell blue"></span><span class="share-cell blue"></span><span class="share-cell blue"></span>
+            <span class="share-cell"></span><span class="share-cell"></span><span class="share-cell"></span><span class="share-cell"></span>
+          </div>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">Copied result</div>
+
+  <script>
+    const tiles = [...document.querySelectorAll('.tile')];
+    const toast = document.querySelector('#toast');
+
+    tiles.forEach((tile) => {
+      tile.addEventListener('click', () => {
+        tile.setAttribute('aria-pressed', tile.getAttribute('aria-pressed') !== 'true');
+      });
+    });
+
+    document.querySelector('#shuffle').addEventListener('click', () => {
+      const board = document.querySelector('.board');
+      tiles.sort(() => Math.random() - 0.5).forEach((tile) => board.appendChild(tile));
+    });
+
+    function showToast(text) {
+      toast.textContent = text;
+      toast.classList.add('show');
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 1300);
+    }
+
+    document.querySelector('#submit').addEventListener('click', () => showToast('Group submitted'));
+    document.querySelector('#share').addEventListener('click', () => showToast('Copied result'));
+  </script>
+</body>
+</html>

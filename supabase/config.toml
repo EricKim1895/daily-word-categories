@@ -1,0 +1,4 @@
+project_id = "wqxxwrudgetmzflfjejd"
+
+[functions.generate-daily-puzzle]
+verify_jwt = false

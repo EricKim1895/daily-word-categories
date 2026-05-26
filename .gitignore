@@ -1,0 +1,10 @@
+node_modules/
+dist/
+tools/
+.env
+.env.*
+!.env.example
+.vercel/
+*.log
+supabase/.temp/
+daily-word-categories-*.html
