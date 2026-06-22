@@ -8,3 +8,5 @@ tools/
 *.log
 supabase/.temp/
 daily-word-categories-*.html
+
+.vercel
